@@ -1,4 +1,18 @@
-; portbind.asm -  Code from ProjectShellcode Tutorials
+; portbind-fork.asm 
+; Code inspired by:
+;  - http://www.projectshellcode.com/
+;  - http://lsd-pl.net/
+;  - http://www.phrack.org/archives/issues/62/7.txt
+;
+; This shellcode will fork a new cmd.exe process in a suspended state and inject
+; itself into the suspended process and resume execution. The parent/vulnerable
+; process will terminate.
+;
+; The purpose of this shellcode is to rebind to the same port that the vulnerable
+; process is listening on to use the same port as the vulnerable process to avoid
+; firewalls.
+; ---------------------------------------------------------------------------------
+
 [SECTION .text]
 
 BITS 32
